@@ -1,0 +1,14 @@
+# Machine Learning
+tensorflow>=2.15
+datasets
+pandas
+numpy
+scikit-learn
+matplotlib
+seaborn
+
+# Backend
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart

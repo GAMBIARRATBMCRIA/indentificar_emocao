@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plataforma de Reconhecimento de Emoções em Texto (PT-BR) usando Deep Learning">
+    <title>SenseAI - Identificador de Emoções</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="background-mesh"></div>
+    
+    <main class="container">
+        <header>
+            <div class="logo-wrapper">
+                <span class="logo-icon">✨</span>
+            </div>
+            <h1>SenseAI</h1>
+            <p>Descubra a emoção predominante em qualquer texto utilizando Inteligência Artificial</p>
+        </header>
+
+        <section class="input-section glass-panel">
+            <form id="emotion-form">
+                <label for="text-input" class="sr-only">Digite seu texto</label>
+                <textarea 
+                    id="text-input" 
+                    placeholder="Digite seu comentário ou texto aqui (ex: Estou muito feliz com essa novidade!)..."
+                    required
+                    minlength="2"
+                    maxlength="5000"
+                ></textarea>
+                
+                <div class="actions">
+                    <span class="char-count" id="char-count">0 / 5000</span>
+                    <button type="submit" id="analyze-btn">
+                        <span class="btn-text">Analisar Emoção</span>
+                        <div class="loader hidden" id="btn-loader"></div>
+                    </button>
+                </div>
+            </form>
+            <div id="error-message" class="error-toast hidden"></div>
+        </section>
+
+        <section class="results-section hidden" id="results-section">
+            <div class="primary-result glass-panel" id="primary-result-card">
+                <div class="emotion-header">
+                    <h2 class="result-title">Emoção Predominante</h2>
+                    <span class="confidence-badge" id="confidence-badge">92% de Confiança</span>
+                </div>
+                <div class="emotion-display">
+                    <span class="emotion-emoji" id="predominant-emoji">😄</span>
+                    <span class="emotion-name" id="predominant-name">Alegria</span>
+                </div>
+            </div>
+
+            <div class="probabilities-panel glass-panel">
+                <h3>Probabilidades Detalhadas</h3>
+                <div class="bars-container" id="bars-container">
+                    <!-- Barras injetadas via JS -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

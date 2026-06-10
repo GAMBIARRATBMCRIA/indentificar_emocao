@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+tensorflow>=2.15
+numpy
