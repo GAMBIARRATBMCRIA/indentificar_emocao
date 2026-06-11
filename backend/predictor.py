@@ -13,6 +13,14 @@ class EmotionPredictor:
         self.model = None
         self.tokenizer = None
         self.is_loaded = False
+        self.thresholds = {
+            'anger': 0.20,
+            'disgust': 0.15,
+            'fear': 0.15,
+            'joy': 0.20,
+            'sadness': 0.20,
+            'surprise': 0.15
+        }
         self.load_artifacts()
 
     def load_artifacts(self):
@@ -20,7 +28,7 @@ class EmotionPredictor:
         try:
             if os.path.exists(config.MODEL_PATH) and os.path.exists(config.TOKENIZER_PATH):
                 import tensorflow as tf
-                self.model = tf.keras.models.load_model(config.MODEL_PATH)
+                self.model = tf.keras.models.load_model(config.MODEL_PATH, compile=False)
                 self.tokenizer = load_tokenizer(config.TOKENIZER_PATH)
                 self.is_loaded = True
                 print("Modelos carregados com sucesso!")
@@ -40,20 +48,35 @@ class EmotionPredictor:
         # Predição
         y_pred_probs = self.model.predict(X)[0] # Pega o primeiro item do batch
         
-        # Encontrar a emoção predominante
-        predominant_index = int(np.argmax(y_pred_probs))
-        predominant_emotion = config.EMOTION_LABELS[predominant_index]
-        confidence = float(y_pred_probs[predominant_index])
-        
         # Montar o dicionário de probabilidades
         prob_dict = {
             emotion: float(prob) 
             for emotion, prob in zip(config.EMOTION_LABELS, y_pred_probs)
         }
         
+        # Filtrar as emoções que ultrapassaram o threshold
+        emocoes_detectadas = []
+        max_emotion = None
+        max_prob = -1.0
+        
+        for emotion, prob in prob_dict.items():
+            if prob > max_prob:
+                max_prob = prob
+                max_emotion = emotion
+                
+            if prob >= self.thresholds.get(emotion, 0.20):
+                emocoes_detectadas.append({"emocao": emotion, "confianca": prob})
+        
+        # Fallback: Se nenhuma emoção passar do threshold, retornamos a que tem a maior probabilidade
+        # em vez de retornar "Neutro".
+        if not emocoes_detectadas and max_emotion is not None:
+            emocoes_detectadas.append({"emocao": max_emotion, "confianca": max_prob})
+            
+        # Ordenar as detectadas por confiança (decrescente)
+        emocoes_detectadas.sort(key=lambda x: x["confianca"], reverse=True)
+        
         return {
-            "emocao_predominante": predominant_emotion,
-            "confianca": confidence,
+            "emocoes_detectadas": emocoes_detectadas,
             "probabilidades": prob_dict
         }
 

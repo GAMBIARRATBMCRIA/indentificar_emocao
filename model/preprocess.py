@@ -3,7 +3,10 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import json
 import os
-import config
+try:
+    from model import config
+except ImportError:
+    import config
 
 def clean_text(text: str) -> str:
     """

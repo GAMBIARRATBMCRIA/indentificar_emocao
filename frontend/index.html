@@ -21,6 +21,10 @@
         </header>
 
         <section class="input-section glass-panel">
+            <div style="text-align: center; margin-bottom: 25px;">
+                <img src="img/barber.png" alt="Barbeiro e cliente" style="width: 100%; max-width: 400px; height: auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); margin-bottom: 15px;">
+                <p style="font-size: 1.2rem; font-weight: 600; color: var(--text-main); font-style: italic;">"Como você quer se sentir hoje?"</p>
+            </div>
             <form id="emotion-form">
                 <label for="text-input" class="sr-only">Digite seu texto</label>
                 <textarea 
@@ -45,12 +49,10 @@
         <section class="results-section hidden" id="results-section">
             <div class="primary-result glass-panel" id="primary-result-card">
                 <div class="emotion-header">
-                    <h2 class="result-title">Emoção Predominante</h2>
-                    <span class="confidence-badge" id="confidence-badge">92% de Confiança</span>
+                    <h2 class="result-title">Emoções Detectadas</h2>
                 </div>
-                <div class="emotion-display">
-                    <span class="emotion-emoji" id="predominant-emoji">😄</span>
-                    <span class="emotion-name" id="predominant-name">Alegria</span>
+                <div class="emotion-display" id="detected-emotions-container" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px;">
+                    <!-- Tags de emoções inseridas via JS -->
                 </div>
             </div>
 

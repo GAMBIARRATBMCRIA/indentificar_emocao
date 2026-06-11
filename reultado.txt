@@ -1,0 +1,105 @@
+
+(venv) PS C:\Users\User\Desktop\projeto_ia\model> python train.py
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781135051.084757    8860 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1781135052.677689    8860 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+1. Baixando dataset...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2. Convertendo labels...
+Map: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████| 2226/2226 [00:00<00:00, 10759.78 examples/s]
+Map: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████| 400/400 [00:00<00:00, 8256.59 examples/s]
+Map: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████| 4452/4452 [00:00<00:00, 11422.43 examples/s]
+
+Distribuição das emoções:
+
+anger     : 718        
+disgust   : 75
+fear      : 109        
+joy       : 581        
+sadness   : 322        
+surprise  : 153        
+
+Total de exemplos: 2226
+
+Pesos calculados:      
+anger     : 0.5167     
+disgust   : 4.9467     
+fear      : 3.4037     
+joy       : 0.6386     
+sadness   : 1.1522     
+surprise  : 2.4248     
+
+3. Limpando textos...  
+
+Tokenizer salvo em C:\Users\User\Desktop\projeto_ia\model\artifacts\tokenizer.json
+
+4. Tokenizando...
+
+5. Construindo modelo...
+C:\Users\User\Desktop\projeto_ia\venv\Lib\site-packages\keras\src\layers\core\embedding.py:103: UserWarning: Argument `input_length` is deprecated. Just remove it.
+  warnings.warn(
+I0000 00:00:1781135057.688770    8860 cpu_feature_guard.cc:227] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:tensorflow:TensorFlow GPU support is not available on native Windows for TensorFlow >= 2.11. Even if CUDA/cuDNN are installed, GPU will not be used. Please use WSL2 or the TensorFlow-DirectML plugin.
+Model: "sequential"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Layer (type)                         ┃ Output Shape                ┃         Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ embedding (Embedding)                │ ?                           │     0 (unbuilt) │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ bidirectional (Bidirectional)        │ ?                           │     0 (unbuilt) │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dropout (Dropout)                    │ ?                           │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense (Dense)                        │ ?                           │     0 (unbuilt) │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dropout_1 (Dropout)                  │ ?                           │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense_1 (Dense)                      │ ?                           │     0 (unbuilt) │
+└──────────────────────────────────────┴─────────────────────────────┴─────────────────┘
+ Total params: 0 (0.00 B)
+ Trainable params: 0 (0.00 B)
+ Non-trainable params: 0 (0.00 B)
+
+6. Treinando...
+Epoch 1/10
+68/70 ━━━━━━━━━━━━━━━━━━━━ 0s 28ms/step - binary_accuracy: 0.7191 - loss: 0.5975 - precision: 0.1108 - recall: 0.1291
+Epoch 1: val_loss improved from None to 0.47059, saving model to C:\Users\User\Desktop\projeto_ia\model\artifacts\emotion_model.keras
+
+Epoch 1: finished saving model to C:\Users\User\Desktop\projeto_ia\model\artifacts\emotion_model.keras
+70/70 ━━━━━━━━━━━━━━━━━━━━ 5s 36ms/step - binary_accuracy: 0.7901 - loss: 0.5465 - precision: 0.1258 - recall: 0.0725 - val_binary_accuracy: 0.8483 - val_loss: 0.4706 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 2/10
+70/70 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - binary_accuracy: 0.8391 - loss: 0.4937 - precision: 0.2130 - recall: 0.0328
+Epoch 2: val_loss improved from 0.47059 to 0.45536, saving model to C:\Users\User\Desktop\projeto_ia\model\artifacts\emotion_model.keras
+
+Epoch 2: finished saving model to C:\Users\User\Desktop\projeto_ia\model\artifacts\emotion_model.keras
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 28ms/step - binary_accuracy: 0.8433 - loss: 0.4873 - precision: 0.1973 - recall: 0.0225 - val_binary_accuracy: 0.8483 - val_loss: 0.4554 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 3/10
+69/70 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - binary_accuracy: 0.8510 - loss: 0.4609 - precision: 0.2800 - recall: 0.0226
+Epoch 3: val_loss did not improve from 0.45536
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 26ms/step - binary_accuracy: 0.8491 - loss: 0.4527 - precision: 0.2857 - recall: 0.0194 - val_binary_accuracy: 0.8483 - val_loss: 0.4673 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 4/10
+70/70 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - binary_accuracy: 0.8457 - loss: 0.3837 - precision: 0.3645 - recall: 0.0771        
+Epoch 4: val_loss did not improve from 0.45536
+
+Epoch 4: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 26ms/step - binary_accuracy: 0.8461 - loss: 0.3716 - precision: 0.4047 - recall: 0.1062 - val_binary_accuracy: 0.8467 - val_loss: 0.4901 - val_precision: 0.0000e+00 - val_recall: 0.0000e+00 - learning_rate: 0.0010
+Epoch 5/10
+69/70 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - binary_accuracy: 0.8509 - loss: 0.3237 - precision: 0.4946 - recall: 0.1768
+Epoch 5: val_loss did not improve from 0.45536
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 26ms/step - binary_accuracy: 0.8544 - loss: 0.3184 - precision: 0.5087 - recall: 0.1951 - val_binary_accuracy: 0.8433 - val_loss: 0.5166 - val_precision: 0.2500 - val_recall: 0.0165 - learning_rate: 5.0000e-04
+Epoch 6/10
+70/70 ━━━━━━━━━━━━━━━━━━━━ 0s 25ms/step - binary_accuracy: 0.8574 - loss: 0.2961 - precision: 0.5494 - recall: 0.2523
+Epoch 6: val_loss did not improve from 0.45536
+
+Epoch 6: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 27ms/step - binary_accuracy: 0.8638 - loss: 0.2885 - precision: 0.5734 - recall: 0.2773 - val_binary_accuracy: 0.8550 - val_loss: 0.5089 - val_precision: 0.6176 - val_recall: 0.1154 - learning_rate: 5.0000e-04
+Epoch 7/10
+70/70 ━━━━━━━━━━━━━━━━━━━━ 0s 24ms/step - binary_accuracy: 0.8704 - loss: 0.2687 - precision: 0.6176 - recall: 0.3593
+Epoch 7: val_loss did not improve from 0.45536
+70/70 ━━━━━━━━━━━━━━━━━━━━ 2s 26ms/step - binary_accuracy: 0.8807 - loss: 0.2519 - precision: 0.6591 - recall: 0.3861 - val_binary_accuracy: 0.8508 - val_loss: 0.5420 - val_precision: 0.5246 - val_recall: 0.1758 - learning_rate: 2.5000e-04
+
+Treinamento concluído.
+Modelo salvo em:
+C:\Users\User\Desktop\projeto_ia\model\artifacts\emotion_model.keras

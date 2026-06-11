@@ -1,5 +1,7 @@
 # Machine Learning
 tensorflow>=2.15
+tf-keras
+transformers
 datasets
 pandas
 numpy

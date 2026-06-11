@@ -1,107 +1,134 @@
 import os
 import numpy as np
-from datasets import load_dataset
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Embedding, Bidirectional, LSTM, Dense, Dropout
+from datasets import load_dataset
+from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 import config
-from preprocess import clean_text, fit_tokenizer, preprocess_texts, save_tokenizer
+from preprocess import clean_text
 
-def convert_multilabel_to_single(example):
-    """
-    Converte as anotações multi-label do BRIGHTER para single-label via argmax.
-    O dataset tem as labels ['anger', 'disgust', 'fear', 'joy', 'sadness', 'surprise'].
-    """
-    scores = [
-        example['anger'],
-        example['disgust'],
-        example['fear'],
-        example['joy'],
-        example['sadness'],
-        example['surprise']
+EMOTION_NAMES = [
+    "anger", "disgust", "fear", "joy", "sadness", "surprise"
+]
+
+def convert_to_multilabel_array(example):
+    labels = [
+        example["anger"],
+        example["disgust"],
+        example["fear"],
+        example["joy"],
+        example["sadness"],
+        example["surprise"]
     ]
-    example['label'] = np.argmax(scores)
+    example["label"] = labels
     return example
 
-def build_model(vocab_size, max_seq_length, embedding_dim, lstm_units, dense_units, num_classes):
-    model = Sequential([
-        Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_seq_length),
-        Bidirectional(LSTM(units=lstm_units, return_sequences=False)),
-        Dropout(config.DROPOUT_RATE_LSTM),
-        Dense(units=dense_units, activation='relu'),
-        Dropout(config.DROPOUT_RATE_DENSE),
-        Dense(units=num_classes, activation='softmax')
-    ])
-    
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE),
-        loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
+def show_dataset_statistics(y_train):
+    print("\nDistribuição das emoções:\n")
+    totals = y_train.sum(axis=0)
+    for emotion, total in zip(EMOTION_NAMES, totals):
+        print(f"{emotion:10s}: {int(total)}")
+    print("\nTotal de exemplos:", len(y_train))
+
+def calculate_class_weights(y_train):
+    totals = y_train.sum(axis=0)
+    weights = len(y_train) / (len(totals) * np.maximum(totals, 1))
+    print("\nPesos calculados:")
+    for emotion, weight in zip(EMOTION_NAMES, weights):
+        print(f"{emotion:10s}: {weight:.4f}")
+    return weights
+
+def weighted_binary_crossentropy(class_weights):
+    class_weights = tf.constant(class_weights, dtype=tf.float32)
+    def loss(y_true, y_pred):
+        y_true = tf.cast(y_true, tf.float32)
+        # BERT output layer uses linear activation (logits). We must apply sigmoid.
+        y_pred = tf.nn.sigmoid(y_pred)
+        y_pred = tf.clip_by_value(y_pred, 1e-7, 1 - 1e-7)
+        loss_pos = y_true * tf.math.log(y_pred) * class_weights
+        loss_neg = (1 - y_true) * tf.math.log(1 - y_pred)
+        loss = -(loss_pos + loss_neg)
+        return tf.reduce_mean(loss)
+    return loss
+
+def create_tf_dataset(texts, labels, tokenizer, batch_size, shuffle=False):
+    cleaned_texts = [clean_text(text) for text in texts]
+    encodings = tokenizer(
+        cleaned_texts, 
+        truncation=True, 
+        padding='max_length', 
+        max_length=config.MAX_SEQ_LENGTH, 
+        return_tensors='tf'
     )
-    return model
+    dataset = tf.data.Dataset.from_tensor_slices((dict(encodings), labels))
+    if shuffle:
+        dataset = dataset.shuffle(1000)
+    return dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
 
 def main():
-    print("1. Baixando dataset BRIGHTER (ptbr)...")
+    print("1. Baixando dataset...")
     dataset = load_dataset("brighter-dataset/BRIGHTER-emotion-categories", "ptbr")
+
+    print("2. Convertendo labels...")
+    dataset = dataset.map(convert_to_multilabel_array)
+
+    train_texts = dataset["train"]["text"]
+    train_labels = np.array(dataset["train"]["label"])
+    val_texts = dataset["dev"]["text"]
+    val_labels = np.array(dataset["dev"]["label"])
+
+    show_dataset_statistics(train_labels)
+    class_weights = calculate_class_weights(train_labels)
+
+    print("\n3. Carregando Tokenizer do HuggingFace...")
+    tokenizer = AutoTokenizer.from_pretrained(config.MODEL_CHECKPOINT)
     
-    print("2. Convertendo labels para single-label (argmax)...")
-    dataset = dataset.map(convert_multilabel_to_single)
-    
-    train_texts = dataset['train']['text']
-    train_labels = np.array(dataset['train']['label'])
-    
-    val_texts = dataset['dev']['text']
-    val_labels = np.array(dataset['dev']['label'])
-    
-    test_texts = dataset['test']['text']
-    test_labels = np.array(dataset['test']['label'])
-    
-    print("3. Limpando os textos e treinando o tokenizer...")
-    cleaned_train_texts = [clean_text(t) for t in train_texts]
-    tokenizer = fit_tokenizer(cleaned_train_texts)
-    
-    # Salvar o tokenizer
-    save_tokenizer(tokenizer, config.TOKENIZER_PATH)
-    print(f"Tokenizer salvo em {config.TOKENIZER_PATH}")
-    
-    # Atualizar o vocab size real (usar o min entre o definido e o tamanho do word_index)
-    actual_vocab_size = min(config.VOCAB_SIZE, len(tokenizer.word_index) + 1)
-    
-    print("4. Tokenizando e aplicando padding...")
-    X_train = preprocess_texts(train_texts, tokenizer)
-    X_val = preprocess_texts(val_texts, tokenizer)
-    # X_test = preprocess_texts(test_texts, tokenizer) # A avaliação completa será feita no evaluate.py
-    
-    y_train = train_labels
-    y_val = val_labels
-    
-    print("5. Construindo o modelo...")
-    model = build_model(
-        vocab_size=actual_vocab_size,
-        max_seq_length=config.MAX_SEQ_LENGTH,
-        embedding_dim=config.EMBEDDING_DIM,
-        lstm_units=config.LSTM_UNITS,
-        dense_units=config.DENSE_UNITS,
-        num_classes=config.NUM_CLASSES
+    # Salvar tokenizer para uso posterior
+    tokenizer.save_pretrained(config.HF_MODEL_DIR)
+
+    print("\n4. Tokenizando datasets...")
+    train_dataset = create_tf_dataset(train_texts, train_labels, tokenizer, config.BATCH_SIZE, shuffle=True)
+    val_dataset = create_tf_dataset(val_texts, val_labels, tokenizer, config.BATCH_SIZE, shuffle=False)
+
+    print("\n5. Carregando modelo BERTimbau...")
+    model = TFAutoModelForSequenceClassification.from_pretrained(
+        config.MODEL_CHECKPOINT,
+        num_labels=config.NUM_CLASSES,
+        problem_type="multi_label_classification"
     )
-    model.summary()
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=config.LEARNING_RATE)
     
-    print("6. Treinando o modelo...")
+    model.compile(
+        optimizer=optimizer,
+        loss=weighted_binary_crossentropy(class_weights),
+        metrics=[
+            "binary_accuracy",
+            tf.keras.metrics.Precision(name="precision"),
+            tf.keras.metrics.Recall(name="recall")
+        ]
+    )
+
     callbacks = [
-        EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True),
-        ModelCheckpoint(filepath=config.MODEL_PATH, save_best_only=True, monitor='val_loss')
+        EarlyStopping(
+            monitor="val_loss",
+            patience=2,
+            restore_best_weights=True
+        )
     ]
-    
-    history = model.fit(
-        X_train, y_train,
-        validation_data=(X_val, y_val),
+
+    print("\n6. Treinando...")
+    model.fit(
+        train_dataset,
+        validation_data=val_dataset,
         epochs=config.EPOCHS,
-        batch_size=config.BATCH_SIZE,
-        callbacks=callbacks
+        callbacks=callbacks,
+        verbose=1
     )
-    
-    print(f"Treinamento concluído. Modelo salvo em {config.MODEL_PATH}")
+
+    print("\nTreinamento concluído. Salvando modelo...")
+    model.save_pretrained(config.HF_MODEL_DIR)
+    print(f"Modelo salvo em: {config.HF_MODEL_DIR}")
 
 if __name__ == "__main__":
     main()

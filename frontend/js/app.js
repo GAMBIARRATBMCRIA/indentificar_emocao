@@ -79,23 +79,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderResults(data) {
-        // Render Predominant Emotion
-        const predominantKey = data.emocao_predominante;
-        const predominantEmotion = emotionMap[predominantKey];
-        const confidencePct = Math.round(data.confianca * 100);
+        // Render Detected Emotions
+        const detectedContainer = document.getElementById('detected-emotions-container');
+        detectedContainer.innerHTML = '';
+        
+        let primaryColor = '#ffffff';
 
-        document.getElementById('predominant-emoji').textContent = predominantEmotion.emoji;
-        
-        const nameEl = document.getElementById('predominant-name');
-        nameEl.textContent = predominantEmotion.pt;
-        nameEl.style.color = predominantEmotion.color;
-        
-        const badgeEl = document.getElementById('confidence-badge');
-        badgeEl.textContent = `${confidencePct}% de Confiança`;
-        
-        // Remove old glow and add new specific to emotion
+        data.emocoes_detectadas.forEach((item, index) => {
+            const emotionData = emotionMap[item.emocao] || { pt: 'Neutro', emoji: '😐', color: '#9ca3af' };
+            const confidencePct = Math.round(item.confianca * 100);
+            
+            if (index === 0) {
+                primaryColor = emotionData.color;
+            }
+
+            const tag = document.createElement('div');
+            tag.className = 'emotion-tag';
+            tag.style.display = 'inline-flex';
+            tag.style.alignItems = 'center';
+            tag.style.gap = '8px';
+            tag.style.padding = '8px 16px';
+            tag.style.borderRadius = '20px';
+            tag.style.border = `1px solid ${emotionData.color}`;
+            tag.style.background = 'rgba(255, 255, 255, 0.05)';
+            
+            tag.innerHTML = `
+                <span style="font-size: 1.2rem;">${emotionData.emoji}</span>
+                <span style="color: ${emotionData.color}; font-weight: 600;">${emotionData.pt}</span>
+                <span style="background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; margin-left: 5px;">${confidencePct}%</span>
+            `;
+            
+            detectedContainer.appendChild(tag);
+        });
+
+        // Set glow based on most confident emotion
         const primaryCard = document.getElementById('primary-result-card');
-        primaryCard.style.boxShadow = `0 10px 40px -10px ${predominantEmotion.color}40`; // 40 is hex for 25% opacity
+        primaryCard.style.boxShadow = `0 10px 40px -10px ${primaryColor}40`; // 40 is hex for 25% opacity
 
         // Render Probabilities Bars
         const barsContainer = document.getElementById('bars-container');
